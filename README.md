@@ -47,6 +47,31 @@ SVG Extractor Pro uses advanced detection techniques to find SVG images that oth
 - Extracts SVGs used as CSS backgrounds
 - Handles data URI SVGs
 
+## 📥 Download and Installation
+
+<div align="center">
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/svg-extractor-pro/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search">
+    <img src="https://img.shields.io/badge/Download_from-Firefox_Add--on_Store-FF7139?style=for-the-badge&logo=firefox-browser&logoColor=white" alt="Download from Firefox Add-on Store">
+  </a>
+</div>
+
+### Installation Steps:
+
+1. Visit the [SVG Extractor Pro page on Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/svg-extractor-pro/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search)
+2. Click the "Add to Firefox" button
+3. Follow the prompts to complete installation
+4. The SVG Extractor Pro icon will appear in your browser toolbar
+
+### Leave a Review
+
+If you find SVG Extractor Pro helpful, please consider leaving a review on the Firefox Add-ons page. Your feedback helps others discover this tool!
+
+<div align="center">
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/svg-extractor-pro/reviews/">
+    <img src="data/stars.png" alt="Leave a 5-star review" width="250">
+  </a>
+</div>
+
 ## 🛠️ Development
 
 ### Prerequisites
@@ -72,6 +97,24 @@ SVG Extractor Pro uses advanced detection techniques to find SVG images that oth
    - Click "This Firefox"
    - Click "Load Temporary Add-on"
    - Select the `manifest.json` file from the project directory
+
+## ☕ Support My Work
+
+If you find SVG Extractor Pro useful in your projects or workflow, please consider supporting its continued development:
+
+<div align="center">
+  <a href="https://ruslanlap.github.io/ruslanlap_buymeacoffe/">
+    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
+  </a>
+</div>
+
+Your support helps me:
+- Maintain and improve SVG Extractor Pro
+- Add new features and capabilities
+- Create more useful tools and extensions
+- Provide better documentation and support
+
+Every contribution, no matter how small, is greatly appreciated and motivates me to continue developing free and open-source tools for the community.
 
 ## 🤝 Contributing
 
