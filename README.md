@@ -10,9 +10,7 @@
   [![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-FF7139?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/firefox/addon/svg-extractor-pro/)
 <<<<<<< HEAD
   [![Version](https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge)](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/releases)
-=======
-  [![Version](https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge)](https://github.com/ruslanlap/SVG-Extactor-firefox-add-on/releases)
->>>>>>> origin/master
+  [![Version](https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge)](https://github.com/ruslanlap/SVG-Extractor-firefox-add-on/releases)
   [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 </div>
 
