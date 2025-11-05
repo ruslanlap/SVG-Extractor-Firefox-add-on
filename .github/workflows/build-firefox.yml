@@ -1,0 +1,99 @@
+name: Build Firefox Extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'firefox/**'
+    tags:
+      - 'v*-firefox'
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-firefox:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Create Firefox build directory
+        run: |
+          mkdir -p firefox-build
+          cp manifest.json firefox-build/
+          cp background.js firefox-build/
+          cp content-script.js firefox-build/
+          cp popup.js firefox-build/
+          cp popup.html firefox-build/
+          cp results.js firefox-build/
+          cp results.html firefox-build/
+          cp results.css firefox-build/
+          cp -r icons firefox-build/
+          cp -r lib firefox-build/
+          cp -r data firefox-build/ || true
+
+      - name: Update manifest for Firefox
+        run: |
+          cd firefox-build
+          # Ensure manifest uses browser.* API
+          sed -i 's/"manifest_version": 3/"manifest_version": 2/g' manifest.json || true
+
+      - name: Validate extension
+        run: |
+          cd firefox-build
+          web-ext lint --warnings-as-errors=false
+
+      - name: Get version from manifest
+        id: get_version
+        run: |
+          VERSION=$(grep -oP '"version":\s*"\K[^"]+' manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create Firefox package (ZIP)
+        run: |
+          cd firefox-build
+          zip -r ../firefox-extension.zip . -x "*.git*" "*.DS_Store"
+          cd ..
+          mkdir -p releases/firefox
+          mv firefox-extension.zip releases/firefox/svg-extractor-pro-firefox-${{ steps.get_version.outputs.version }}.zip
+
+      - name: Upload Firefox artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension-${{ steps.get_version.outputs.version }}
+          path: releases/firefox/*.zip
+
+      - name: Create Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: releases/firefox/*.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print build summary
+        run: |
+          echo "### Firefox Build Summary 🦊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Firefox extension (.zip) has been built successfully!" >> $GITHUB_STEP_SUMMARY
