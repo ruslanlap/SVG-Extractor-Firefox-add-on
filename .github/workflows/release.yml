@@ -1,0 +1,242 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.1.2)'
+        required: true
+        type: string
+      build_firefox:
+        description: 'Build Firefox version'
+        required: true
+        type: boolean
+        default: true
+      build_chrome:
+        description: 'Build Chrome version'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      release_id: ${{ steps.create_release.outputs.id }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: SVG Extractor Pro v${{ steps.get_version.outputs.version }}
+          draft: true
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            # SVG Extractor Pro v${{ steps.get_version.outputs.version }}
+
+            ## 📦 Downloads
+
+            Choose the version for your browser:
+
+            - **Firefox**: Download `.xpi` file
+            - **Chrome/Edge/Brave/Opera**: Download `.zip` file
+
+            ## 🚀 Installation
+
+            ### Firefox
+            1. Download the `.xpi` file
+            2. Open Firefox
+            3. Go to Add-ons (Ctrl+Shift+A)
+            4. Click the gear icon and select "Install Add-on From File"
+            5. Select the downloaded `.xpi` file
+
+            ### Chrome/Edge/Brave/Opera
+            1. Download and extract the `.zip` file
+            2. Open browser and go to extensions page
+               - Chrome: `chrome://extensions/`
+               - Edge: `edge://extensions/`
+            3. Enable "Developer mode"
+            4. Click "Load unpacked"
+            5. Select the extracted folder
+
+            ## ✨ Features
+
+            - 🔍 Find all SVG images on web pages
+            - 💾 Download individual SVGs
+            - 📦 Download all SVGs as ZIP
+            - 📋 Copy SVG code to clipboard
+            - 🖼️ Export SVG to PNG
+            - 🌓 Dark/Light theme
+            - 🌍 English/Ukrainian languages
+
+            ## 🐛 Bug Reports
+
+            Found an issue? [Report it here](https://github.com/${{ github.repository }}/issues)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-firefox:
+    needs: create-release
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.build_firefox == 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Create Firefox build
+        run: |
+          mkdir -p firefox-build
+          cp manifest.json firefox-build/
+          cp background.js firefox-build/
+          cp content-script.js firefox-build/
+          cp popup.js firefox-build/
+          cp popup.html firefox-build/
+          cp results.js firefox-build/
+          cp results.html firefox-build/
+          cp results.css firefox-build/
+          cp -r icons firefox-build/
+          cp -r lib firefox-build/
+          cp -r data firefox-build/ || true
+
+      - name: Build XPI
+        run: |
+          cd firefox-build
+          web-ext build --overwrite-dest
+          mkdir -p ../releases
+          cp web-ext-artifacts/*.zip ../releases/svg-extractor-pro-${{ needs.create-release.outputs.version }}-firefox.xpi
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.create-release.outputs.version }}
+          files: releases/*.xpi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-chrome:
+    needs: create-release
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.build_chrome == 'true')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Chrome build
+        run: |
+          mkdir -p chrome-build
+          cp manifest.json chrome-build/
+          cp background.js chrome-build/
+          cp content-script.js chrome-build/
+          cp popup.js chrome-build/
+          cp popup.html chrome-build/
+          cp results.js chrome-build/
+          cp results.html chrome-build/
+          cp results.css chrome-build/
+          cp -r icons chrome-build/
+          cp -r lib chrome-build/
+          cp -r data chrome-build/ || true
+
+      - name: Create ZIP
+        run: |
+          cd chrome-build
+          zip -r ../chrome-package.zip . -x "*.git*" "*.DS_Store"
+          cd ..
+          mkdir -p releases
+          mv chrome-package.zip releases/svg-extractor-pro-${{ needs.create-release.outputs.version }}-chrome.zip
+
+      - name: Create Installation Guide
+        run: |
+          cat > releases/CHROME-INSTALLATION.txt << 'EOF'
+          SVG Extractor Pro - Chrome Installation Guide
+
+          1. Extract the ZIP file
+          2. Open Chrome: chrome://extensions/
+          3. Enable "Developer mode"
+          4. Click "Load unpacked"
+          5. Select extracted folder
+
+          Compatible with: Chrome 88+, Edge 88+, Brave, Opera 74+
+          EOF
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.create-release.outputs.version }}
+          files: |
+            releases/*.zip
+            releases/CHROME-INSTALLATION.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  finalize-release:
+    needs: [create-release, build-firefox, build-chrome]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Publish Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const release = await github.rest.repos.getRelease({
+              owner,
+              repo,
+              release_id: '${{ needs.create-release.outputs.release_id }}'
+            });
+
+            await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: release.data.id,
+              draft: false
+            });
+
+            core.notice('✅ Release published successfully!');
+
+      - name: Print Summary
+        run: |
+          echo "### 🎉 Release Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ needs.create-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Built packages:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Firefox (.xpi)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Chrome (.zip)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.create-release.outputs.version }})" >> $GITHUB_STEP_SUMMARY

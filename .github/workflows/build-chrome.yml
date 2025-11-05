@@ -1,0 +1,146 @@
+name: Build Chrome Extension
+
+on:
+  push:
+    branches:
+      - 'chrome/**'
+      - 'claude/chrome-*'
+    tags:
+      - 'v*-chrome'
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-chrome:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Create Chrome build directory
+        run: |
+          mkdir -p chrome-build
+          cp manifest.json chrome-build/
+          cp background.js chrome-build/
+          cp content-script.js chrome-build/
+          cp popup.js chrome-build/
+          cp popup.html chrome-build/
+          cp results.js chrome-build/
+          cp results.html chrome-build/
+          cp results.css chrome-build/
+          cp -r icons chrome-build/
+          cp -r lib chrome-build/
+          cp -r data chrome-build/ || true
+
+      - name: Validate Chrome manifest
+        run: |
+          cd chrome-build
+          # Check if manifest is v3
+          if ! grep -q '"manifest_version": 3' manifest.json; then
+            echo "⚠️ Warning: Manifest is not version 3"
+            exit 1
+          fi
+          echo "✅ Manifest V3 validated"
+
+      - name: Check Chrome API usage
+        run: |
+          cd chrome-build
+          # Verify chrome.* API is used (not browser.*)
+          if grep -r "browser\." *.js; then
+            echo "⚠️ Warning: Found browser.* API usage. Should use chrome.* for Chrome"
+            echo "Files with browser.* API:"
+            grep -l "browser\." *.js || true
+          else
+            echo "✅ Chrome API usage validated"
+          fi
+
+      - name: Get version from manifest
+        id: get_version
+        run: |
+          VERSION=$(grep -oP '"version":\s*"\K[^"]+' manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create Chrome package (ZIP)
+        run: |
+          cd chrome-build
+          zip -r ../chrome-extension.zip . -x "*.git*" "*.DS_Store"
+          cd ..
+          mkdir -p releases/chrome
+          mv chrome-extension.zip releases/chrome/svg-extractor-pro-chrome-${{ steps.get_version.outputs.version }}.zip
+
+      - name: Generate installation instructions
+        run: |
+          cat > releases/chrome/INSTALLATION.txt << 'EOF'
+          ═══════════════════════════════════════════════════════════════
+            SVG EXTRACTOR PRO - CHROME INSTALLATION
+          ═══════════════════════════════════════════════════════════════
+
+          📦 Installation Steps:
+
+          1. Extract the ZIP file to a folder on your computer
+
+          2. Open Chrome and go to: chrome://extensions/
+
+          3. Enable "Developer mode" (toggle in top right corner)
+
+          4. Click "Load unpacked" button
+
+          5. Select the extracted folder
+
+          6. Done! The extension icon will appear in your toolbar
+
+          ═══════════════════════════════════════════════════════════════
+
+          Version: ${{ steps.get_version.outputs.version }}
+          Browser: Chrome 88+, Edge 88+, Brave, Opera 74+
+          Manifest: V3
+
+          EOF
+
+      - name: Upload Chrome artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-${{ steps.get_version.outputs.version }}
+          path: |
+            releases/chrome/*.zip
+            releases/chrome/INSTALLATION.txt
+
+      - name: Create Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            releases/chrome/*.zip
+            releases/chrome/INSTALLATION.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print build summary
+        run: |
+          echo "### Chrome Build Summary 🌐" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Manifest:** V3" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Chrome extension (.zip) has been built successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Compatible with:" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome 88+" >> $GITHUB_STEP_SUMMARY
+          echo "- Edge 88+" >> $GITHUB_STEP_SUMMARY
+          echo "- Brave" >> $GITHUB_STEP_SUMMARY
+          echo "- Opera 74+" >> $GITHUB_STEP_SUMMARY
