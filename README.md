@@ -11,6 +11,10 @@
   [![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-FF7139?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/firefox/addon/svg-extractor-pro/)
   [![Version](https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge)](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/releases)
   [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+  ![Firefox Build](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/actions/workflows/build-firefox.yml/badge.svg)
+  ![Chrome Build](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/actions/workflows/build-chrome.yml/badge.svg)
+  ![Validate](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/actions/workflows/validate.yml/badge.svg)
 </div>
 
 > **✨ Тепер доступно для Google Chrome!** Це робоча версія для Chrome з повною підтримкою Manifest V3.
