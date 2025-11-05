@@ -1,0 +1,32 @@
+CHROME WEB STORE PRIVACY TAB - JUSTIFICATIONS
+================================================
+
+SINGLE PURPOSE DESCRIPTION:
+---------------------------
+This extension has a single purpose: to detect, extract, and download SVG images from web pages. It scans the current page for SVG content in various formats (inline, image tags, CSS backgrounds) and allows users to preview and download them individually or in batch as a ZIP file.
+
+
+PERMISSION JUSTIFICATIONS:
+--------------------------
+
+activeTab:
+Required to access the content of the currently active tab to scan for SVG elements (inline SVGs, <img>, <object>, <embed> tags, and CSS backgrounds with SVG content).
+
+downloads:
+Required to enable users to download extracted SVG files individually or as a ZIP archive. This is a core feature of the extension.
+
+scripting:
+Required to inject content scripts into web pages to detect and extract SVG elements from the DOM, including inline SVGs and SVG references in HTML elements.
+
+storage:
+Required to save user preferences such as theme settings (light/dark mode) and language preferences (English/Ukrainian).
+
+tabs:
+Required to identify the active tab and manage the extension's popup interface in relation to the current page being analyzed.
+
+host_permissions (<all_urls>):
+Required to allow the extension to work on any website where users want to extract SVG images. The extension needs access to analyze page content across all domains to fulfill its single purpose of SVG extraction.
+
+REMOTE CODE:
+------------
+This extension does NOT use remote code. All code is bundled with the extension package. The Content Security Policy is set to 'script-src 'self'' which prevents execution of any remote scripts.
