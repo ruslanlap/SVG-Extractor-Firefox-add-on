@@ -1,0 +1,178 @@
+name: Validate Extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'chrome/**'
+      - 'firefox/**'
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check manifest exists
+        run: |
+          if [ ! -f "manifest.json" ]; then
+            echo "❌ manifest.json not found!"
+            exit 1
+          fi
+          echo "✅ manifest.json found"
+
+      - name: Validate manifest JSON
+        run: |
+          if ! jq empty manifest.json 2>/dev/null; then
+            echo "❌ manifest.json is not valid JSON!"
+            exit 1
+          fi
+          echo "✅ manifest.json is valid JSON"
+
+      - name: Check required files
+        run: |
+          REQUIRED_FILES=(
+            "background.js"
+            "content-script.js"
+            "popup.js"
+            "popup.html"
+            "results.js"
+            "results.html"
+            "results.css"
+          )
+
+          MISSING_FILES=()
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+            echo "❌ Missing required files:"
+            printf '%s\n' "${MISSING_FILES[@]}"
+            exit 1
+          fi
+
+          echo "✅ All required files present"
+
+      - name: Check icons directory
+        run: |
+          if [ ! -d "icons" ]; then
+            echo "❌ icons directory not found!"
+            exit 1
+          fi
+
+          REQUIRED_ICONS=(
+            "icons/icon16.png"
+            "icons/icon48.png"
+            "icons/icon128.png"
+          )
+
+          MISSING_ICONS=()
+
+          for icon in "${REQUIRED_ICONS[@]}"; do
+            if [ ! -f "$icon" ]; then
+              MISSING_ICONS+=("$icon")
+            fi
+          done
+
+          if [ ${#MISSING_ICONS[@]} -gt 0 ]; then
+            echo "❌ Missing required icons:"
+            printf '%s\n' "${MISSING_ICONS[@]}"
+            exit 1
+          fi
+
+          echo "✅ All required icons present"
+
+      - name: Detect browser type
+        id: detect
+        run: |
+          MANIFEST_VERSION=$(jq -r '.manifest_version' manifest.json)
+
+          if [ "$MANIFEST_VERSION" == "2" ]; then
+            BROWSER_TYPE="firefox"
+          elif [ "$MANIFEST_VERSION" == "3" ]; then
+            BROWSER_TYPE="chrome"
+          else
+            echo "❌ Unknown manifest version: $MANIFEST_VERSION"
+            exit 1
+          fi
+
+          echo "browser_type=$BROWSER_TYPE" >> $GITHUB_OUTPUT
+          echo "manifest_version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Detected: $BROWSER_TYPE (Manifest v$MANIFEST_VERSION)"
+
+      - name: Validate API usage
+        run: |
+          BROWSER_TYPE="${{ steps.detect.outputs.browser_type }}"
+
+          if [ "$BROWSER_TYPE" == "chrome" ]; then
+            # Check for browser.* API (should use chrome.*)
+            if grep -r "browser\." --include="*.js" *.js 2>/dev/null; then
+              echo "⚠️ Warning: Found browser.* API in Chrome version"
+              echo "Chrome extensions should use chrome.* API"
+              grep -n "browser\." *.js || true
+            else
+              echo "✅ Chrome API usage validated"
+            fi
+          elif [ "$BROWSER_TYPE" == "firefox" ]; then
+            # Check for chrome.* API (should use browser.*)
+            if grep -r "chrome\." --include="*.js" *.js 2>/dev/null; then
+              echo "⚠️ Warning: Found chrome.* API in Firefox version"
+              echo "Firefox extensions should use browser.* API"
+              grep -n "chrome\." *.js || true
+            else
+              echo "✅ Firefox API usage validated"
+            fi
+          fi
+
+      - name: Check for common issues
+        run: |
+          echo "Checking for common issues..."
+
+          # Check for console.log (should be removed in production)
+          if grep -r "console\.log" --include="*.js" . 2>/dev/null | grep -v node_modules | grep -v ".github"; then
+            echo "⚠️ Warning: Found console.log statements"
+            echo "Consider removing or using conditional logging"
+          fi
+
+          # Check for debugger statements
+          if grep -r "debugger" --include="*.js" . 2>/dev/null | grep -v node_modules | grep -v ".github"; then
+            echo "❌ Error: Found debugger statements"
+            exit 1
+          fi
+
+          echo "✅ No critical issues found"
+
+      - name: Get extension version
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extension version: $VERSION"
+
+      - name: Print validation summary
+        run: |
+          echo "### Validation Summary ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Browser Type:** ${{ steps.detect.outputs.browser_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Manifest Version:** ${{ steps.detect.outputs.manifest_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Extension Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ All checks passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All required files present and valid!" >> $GITHUB_STEP_SUMMARY
