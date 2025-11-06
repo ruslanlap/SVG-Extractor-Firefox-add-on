@@ -15,9 +15,11 @@ chrome.action.onClicked.addListener((tab) => {
   if (
     !tab.url ||
     tab.url.startsWith("chrome://") ||
+    tab.url.startsWith("chrome-extension://") ||
     tab.url.startsWith("about:") ||
     tab.url.startsWith("edge://") ||
-    tab.url.startsWith("mozilla://")
+    tab.url.startsWith("mozilla://") ||
+    tab.url.includes("results.html")
   ) {
     console.warn("Cannot run on this page type:", tab.url);
     return;
