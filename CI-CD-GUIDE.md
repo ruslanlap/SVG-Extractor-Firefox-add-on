@@ -270,4 +270,4 @@ git push origin v1.3.0
 
 **Версія Guide**: 1.0
 **Дата**: 2025-11-05
-**Автор**: Claude Code Assistant
+**Автор**: ruslanlap
