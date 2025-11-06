@@ -17,7 +17,6 @@
   ![Validate](https://github.com/ruslanlap/SVG-Extractor-Firefox-add-on/actions/workflows/validate.yml/badge.svg)
 </div>
 
-> **✨ Тепер доступно для Google Chrome!** Це робоча версія для Chrome з повною підтримкою Manifest V3.
 
 ## 🚀 Features
 
