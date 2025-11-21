@@ -40,7 +40,7 @@
 ## 📋 How It Works
 
 1. **Install the Extension**:
-   - **Chrome**: See [CHROME_INSTALLATION.md](CHROME_INSTALLATION.md) for detailed instructions
+   - **Chrome**: See [Chrome Web Store Submission Guide](CHROME_WEB_STORE_SUBMISSION.md) for publishing, or [CHROME_INSTALLATION.md](CHROME_INSTALLATION.md) for local installation
    - **Firefox**: Install from [Firefox Add-ons store](https://addons.mozilla.org/firefox/addon/svg-extractor-pro/)
 2. **Navigate to Any Website**: Go to a website containing SVG images
 3. **Click the Extension Icon**: The extension will scan the page for SVGs
@@ -51,6 +51,10 @@
 
 For Chrome users, this extension uses **Manifest V3**. To install:
 
+### Option 1: Chrome Web Store (Recommended)
+Coming soon! Follow the [submission guide](CHROME_WEB_STORE_SUBMISSION.md) to publish.
+
+### Option 2: Developer Mode (For Testing)
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" in the top right
 3. Click "Load unpacked" and select this folder
@@ -67,6 +71,16 @@ SVG Extractor Pro uses advanced detection techniques to find SVG images that oth
 - Discovers SVGs in `<object>` and `<embed>` elements
 - Extracts SVGs used as CSS backgrounds
 - Handles data URI SVGs
+
+### Privacy & Security
+
+- **Privacy-Focused**: All processing happens locally on your device
+- **No Data Collection**: No personal information, browsing history, or analytics collected
+- **No External Servers**: Your data never leaves your device
+- **Open Source**: Fully transparent and auditable code
+- **Manifest V3**: Latest security standards for Chrome extensions
+
+For complete details, see our [Privacy Policy](PRIVACY_POLICY.md) and [Permissions Justification](PERMISSIONS_JUSTIFICATION.md).
 
 ## 📥 Download and Installation
 
@@ -136,6 +150,13 @@ Your support helps me:
 - Provide better documentation and support
 
 Every contribution, no matter how small, is greatly appreciated and motivates me to continue developing free and open-source tools for the community.
+
+## 📚 Documentation
+
+- [Privacy Policy](PRIVACY_POLICY.md) - How we handle data and protect your privacy
+- [Permissions Justification](PERMISSIONS_JUSTIFICATION.md) - Detailed explanation of why each permission is needed
+- [Chrome Web Store Submission Guide](CHROME_WEB_STORE_SUBMISSION.md) - How to submit the extension to Chrome Web Store
+- [Chrome Installation Guide](CHROME_INSTALLATION.md) - How to install in developer mode
 
 ## 🤝 Contributing
 
